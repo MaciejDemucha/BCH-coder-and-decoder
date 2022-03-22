@@ -1,8 +1,8 @@
 clear;
-%m = 4; % Or choose any positive integer value of m.
+%m = 8; % Or choose any positive integer value of m.
 %alph = gf(2,m) % Primitive element in GF(2^m)
 
-m = 4;
+m = 8;
 defaultprimpoly = primpoly(m) % Default primitive poly for GF(16)
 allprimpolys = primpoly(m,'all') % All primitive polys for GF(16)
 i1 = isprimitive(25) % Can 25 be the prim_poly input in gf(...)?
