@@ -1,26 +1,61 @@
 clear;
 
-%x = input("Wpisz długość słowa wejściowego: "); %pobranie od usera dł słowa wejciowego x
-n = input("Wpisz długość słowa kodowego (min. 255): ");
-%t = input("Wpisz zdolność korekcyjną t: ");
-%m = fix(log2(n+1)); %liczba wielomianów minimalnych (fix -> cz. całkowita)
-%k = n - t*m; %cz. informacyjna
-k = input("Wpisz długość części informacyjnej: ");
-%xWord = randsrc(x, 1, [0 1]); %losowanie słowa wej
-%fprintf("Dane wejściowe: "); %wypisanie słowa wej
-%fprintf("%d", xWord);
-m = 6;
-fprintf("\nm = "); 
-fprintf("%d\n", m);
-[y] = primpoly(m, 'all'); %wypisanie liczby wielomianów minimalnych ciała galois
+%przykladowe dane
+n = 15;
+k = 5;
+m = 4;
+t = 3;
+gen_pol_str = dec2bin(2467);
+kodowe = 0b101010010100010;
 
-gen = lcm(y(1), y(2));      %g(x) = NWW(m1(x), m3(x)....)
-for i = 3: length(y)      
-    LCM_var = lcm(gen, y(i));
-    gen = LCM_var;
+%Algorytm kodowania
+
+%przesuniecie kodowego o n-k w lewo
+kodowe_przesuniete = dec2bin(bitsll(kodowe, n-k));
+%porownanie po przesunieciu
+fprintf("Przed: %s\n", dec2bin(kodowe));
+fprintf("Po: %s\n", kodowe_przesuniete);
+%zamiana stringu przesunietego kodowego na wielomian
+kodowe_to_array = str2num(sprintf('%c ',kodowe_przesuniete(:)));
+[kodowe_poly] = poly2sym(kodowe_to_array);
+%analogicznie generacyjny
+gen_to_array = str2num(sprintf('%c ',gen_pol_str(:)));
+[gen_poly] = poly2sym(gen_to_array);
+%podzielenie kodowego przez generacyjny
+[r,q] = polynomialReduce(kodowe_poly,gen_poly);
+%obliczenie c(x) - wektora kodowego
+cx = kodowe_poly + r;
+
+%Algorytm dekodowania
+
+%wektor bledow
+e = dec2bin(0b001001000010010); 
+e_to_array = str2num(sprintf('%c ',e(:)));
+[e_poly] = poly2sym(e_to_array);
+%wektor kodowy otrzymany: suma wektora wysylanego i wektora bledow
+cy = cx + e_poly;
+%wyznaczamy syndrom (informację o pozycji błędów odebranego wektora kodowego)
+[s,q_s] = polynomialReduce(e_poly,gen_poly);
+waga_hamminga = nnz(s);
+%korekta bledow
+if waga_hamminga <= t
+    cd= cy + s;
+%dokonczyc
+else
+    while waga_hamminga > t
+        syms x
+        cy_new = bitsra(sym2poly(cy), 1);
+        cy_new_poly = poly2sym(cy_new);
+    end
 end
-gen_bin = dec2bin(gen);
-fprintf("\nNasze g(x) = "); 
-fprintf("%s\n", gen_bin);
 
-[genpoly,t] = bchgenpoly(n,k) %porównanie z gotową funkcją
+%proba znalezienia wielomianu generujacego
+%syms x;
+%a=x^4+x^3+x^2+x+1;
+%b=x^4+x+1;
+%c=x^2+x+1;
+%[out1] = lcm(a,b);
+%[out_final] = lcm(out1,c);
+
+%m = 4;
+%[y] = primpoly(m, 'all');
