@@ -40,7 +40,6 @@ waga_hamminga = nnz(s);
 %korekta bledow
 if waga_hamminga <= t
     cd= cy + s;
-%dokonczyc
 else
     i = 0;
     while waga_hamminga > t
@@ -50,10 +49,17 @@ else
         [s,q_s] = polynomialReduce(cy,gen_poly);
         waga_hamminga = nnz(s);
         i = i + 1;
+        if i == k
+            break
+        end
     end
+if i == k
+        fprintf('Błędy niekorygowalne');
+else
     cd= cy + s;
     cd_przesuniete = bitsll(sym2poly(cd), i);
     cd = poly2sym(cd_przesuniete);
+end
 end
 
 %proba znalezienia wielomianu generujacego
