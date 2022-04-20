@@ -35,18 +35,25 @@ e_to_array = str2num(sprintf('%c ',e(:)));
 %wektor kodowy otrzymany: suma wektora wysylanego i wektora bledow
 cy = cx + e_poly;
 %wyznaczamy syndrom (informację o pozycji błędów odebranego wektora kodowego)
-[s,q_s] = polynomialReduce(e_poly,gen_poly);
+[s,q_s] = polynomialReduce(cy,gen_poly);
 waga_hamminga = nnz(s);
 %korekta bledow
 if waga_hamminga <= t
     cd= cy + s;
 %dokonczyc
 else
+    i = 0;
     while waga_hamminga > t
         syms x
         cy_new = bitsra(sym2poly(cy), 1);
-        cy_new_poly = poly2sym(cy_new);
+        cy = poly2sym(cy_new);
+        [s,q_s] = polynomialReduce(cy,gen_poly);
+        waga_hamminga = nnz(s);
+        i = i + 1;
     end
+    cd= cy + s;
+    cd_przesuniete = bitsll(sym2poly(cd), i);
+    cd = poly2sym(cd_przesuniete);
 end
 
 %proba znalezienia wielomianu generujacego
