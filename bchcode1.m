@@ -1,7 +1,7 @@
 clear;
 
 %przykladowe dane
-n = 15;
+n = 15; 
 k = 5;
 m = 4;
 t = 3;
@@ -22,31 +22,36 @@ kodowe_to_array = str2num(sprintf('%c ',kodowe_przesuniete(:)));
 gen_to_array = str2num(sprintf('%c ',gen_pol_str(:)));
 [gen_poly] = poly2sym(gen_to_array);
 %podzielenie kodowego przez generacyjny
-[r,q] = polynomialReduce(kodowe_poly,gen_poly);
+[r,q] = gfdeconv(kodowe_to_array,gen_to_array);
 %obliczenie c(x) - wektora kodowego
 cx = kodowe_poly + r;
 
 %Algorytm dekodowania
 
 %wektor bledow
-e = dec2bin(0b001001000010010); 
+e = dec2bin(0b000001000010010); 
 e_to_array = str2num(sprintf('%c ',e(:)));
 [e_poly] = poly2sym(e_to_array);
 %wektor kodowy otrzymany: suma wektora wysylanego i wektora bledow
 cy = cx + e_poly;
+cy_to_array = sym2poly(cy);
 %wyznaczamy syndrom (informację o pozycji błędów odebranego wektora kodowego)
-[s,q_s] = polynomialReduce(cy,gen_poly);
+[s,q_s] = gfdeconv(cy_to_array,gen_to_array);
+[s_poly] = poly2sym(s);
 waga_hamminga = nnz(s);
 %korekta bledow
 if waga_hamminga <= t
-    cd= cy + s;
+    cd = fliplr(de2bi(bi2de(fliplr(cy_to_array))+bi2de(fliplr(s))));
+    cd_poly = poly2sym(cd);
+%przesuwanie slowa kodowego w prawo, dopoki w(s) > t
 else
     i = 0;
     while waga_hamminga > t
         syms x
         cy_new = bitsra(sym2poly(cy), 1);
         cy = poly2sym(cy_new);
-        [s,q_s] = polynomialReduce(cy,gen_poly);
+        cy_to_array = sym2poly(cy);
+        [s,q_s] = gfdeconv(cy_to_array,gen_to_array);
         waga_hamminga = nnz(s);
         i = i + 1;
         if i == k
@@ -56,7 +61,8 @@ else
 if i == k
         fprintf('Błędy niekorygowalne');
 else
-    cd= cy + s;
+    %korekta bledow i odpowiednie przesuniecie w lewo
+    cd = fliplr(de2bi(bi2de(fliplr(cy_to_array))+bi2de(fliplr(s))));
     cd_przesuniete = bitsll(sym2poly(cd), i);
     cd = poly2sym(cd_przesuniete);
 end
