@@ -6,7 +6,7 @@ k = 5;
 m = 4;
 t = 3;
 gen_pol_str = dec2bin(2467);
-kodowe = 0b101010010100010;
+kodowe = 0b101000010110010;
 
 %Algorytm kodowania
 
@@ -22,21 +22,22 @@ kodowe_to_array = str2num(sprintf('%c ',kodowe_przesuniete(:)));
 gen_to_array = str2num(sprintf('%c ',gen_pol_str(:)));
 [gen_poly] = poly2sym(gen_to_array);
 %podzielenie kodowego przez generacyjny
-[r,q] = gfdeconv(kodowe_to_array,gen_to_array);
+[q,r] = gfdeconv(kodowe_to_array,gen_to_array);
 %obliczenie c(x) - wektora kodowego
-cx = kodowe_poly + r;
+cx_to_array = fliplr(de2bi(bi2de(fliplr(kodowe_to_array))+bi2de(fliplr(r))));
+cx = poly2sym(cx_to_array);
 
 %Algorytm dekodowania
 
 %wektor bledow
-e = dec2bin(0b000001000010010); 
+e = dec2bin(0b000001000000110); 
 e_to_array = str2num(sprintf('%c ',e(:)));
 [e_poly] = poly2sym(e_to_array);
 %wektor kodowy otrzymany: suma wektora wysylanego i wektora bledow
-cy = cx + e_poly;
-cy_to_array = sym2poly(cy);
+cy_to_array = fliplr(de2bi(bi2de(fliplr(cx_to_array))+bi2de(fliplr(e_to_array))));
+cy = poly2sym(cy_to_array);
 %wyznaczamy syndrom (informację o pozycji błędów odebranego wektora kodowego)
-[s,q_s] = gfdeconv(cy_to_array,gen_to_array);
+[q_s,s] = gfdeconv(e_to_array,gen_to_array);
 [s_poly] = poly2sym(s);
 waga_hamminga = nnz(s);
 %korekta bledow
@@ -51,7 +52,7 @@ else
         cy_new = bitsra(sym2poly(cy), 1);
         cy = poly2sym(cy_new);
         cy_to_array = sym2poly(cy);
-        [s,q_s] = gfdeconv(cy_to_array,gen_to_array);
+        [q_s,s] = gfdeconv(cy_to_array,gen_to_array);
         waga_hamminga = nnz(s);
         i = i + 1;
         if i == k
